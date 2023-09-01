@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Empezar Juego</title>
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	</head>
+	<body>
+		<form id="startGameForm" action="/startGame" method="post">
+			<br />
+			<label for="gameId">ID de juego:</label>
+			<input type="text" id="gameId" name="gameId" required />
+			<button type="button" id="selectIdBtn">Seleccionar</button>
+			<div id="betsInput"></div>
+			<br />
+		</form>
+
+		<script>
+			$("#selectIdBtn").click(function () {
+				$("#betsInput").empty();
+				let id = $("#gameId").val();
+				if (id != "") {
+					let games = JSON.parse(
+						unescape("<%= escape(JSON.stringify(games)) %>")
+					);
+					$("#betsInput").append(`<br/>`);
+					let wrongId = true;
+					games.forEach((game) => {
+						if (game.id === id) {
+							wrongId = false;
+							game.players.forEach((player) => {
+								$("#betsInput").append(`
+								<label for="playersBet">Apuesta de ${player.name}: </label>
+								<input type="number" min="1" max="6" id="playersBet" name="playersBet" class="bet" required> <br>`);
+							});
+
+							$("#betsInput").append(`
+							<br/> <button type="submit" id="startGameBtn">Empezar Juego</button>`);
+						}
+					});
+
+					if (wrongId) {
+						(() => {
+							alert("No existe un juego con este ID");
+						})();
+					}
+				} else {
+					(() => {
+						alert("Ingrese un ID para continuar");
+					})();
+				}
+			});
+
+			$("#startGameForm").on("submit", function (event) {
+				event.preventDefault();
+
+				let values = {};
+
+				$(".bet").each(function () {
+					if (values[$(this).val()]) {
+						alert(
+							"Las apuestas deben ser diferentes para cada jugador."
+						);
+						throw "error: jugadores con apuestas iguales.";
+					}
+					values[$(this).val()] = true;
+				});
+
+				var formData = $(this).serialize();
+
+				$.ajax({
+					type: "POST",
+					url: "/startGame",
+					data: formData,
+					success: function (res) {
+						alert(res.message);
+						window.location.href = `/game/${$("#gameId").val()}`;
+					},
+					error: function () {
+						alert(
+							"Hubo un error al empezar el juego. Por favor, inténtalo de nuevo."
+						);
+					},
+				});
+			});
+		</script>
+	</body>
+</html>

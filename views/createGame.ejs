@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Crear Juego</title>
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	</head>
+	<body>
+		<h1>ID del juego: <%= gameId %></h1>
+		<form id="createGameForm" action="/createGame" method="post">
+			<input type="hidden" name="gameId" value="<%= gameId %>" />
+			<br />
+			<label for="numPlayers">Número de jugadores:</label>
+			<input type="number" id="numPlayers" min="1" max="6" required />
+			<button type="button" id="selectPlayersBtn">Seleccionar</button>
+			<div id="playersInput"></div>
+			<br />
+		</form>
+
+		<script>
+			$("#selectPlayersBtn").click(function () {
+				$("#playersInput").empty();
+				let numPlayers = $("#numPlayers").val();
+				if (numPlayers >= 1 && numPlayers<= 6) {
+					$("#playersInput").append(`
+					<br/>
+					<label for="gameType">Tipo de Juego:</label>
+					<input type="text" id="gameType" name="gameType" required />
+					<br/><br/>`);
+
+					for (var i = 0; i < numPlayers; i++) {
+						$("#playersInput").append(
+							`<label for="player${i + 1}">Nombre del Jugador ${
+								i + 1
+							}: </label>
+						<input type="text" name="playersName" class="player" required> <br>`
+						);
+					}
+
+					$("#playersInput").append(`
+					<br/>
+				<button type="submit" id="createGameBtn">Crear Juego</button>`);
+				} else {
+					(() => { alert("El número de jugadores debe estar entre 1 y 6.") })();
+				}
+			});
+
+			$("#createGameForm").on("submit", function (event) {
+				event.preventDefault();
+
+				var formData = $(this).serialize();
+
+				$.ajax({
+					type: "POST",
+					url: "/createGame",
+					data: formData,
+					success: function (res) {
+						alert(res.message);
+						window.location.href =  `/game/${'<%= gameId %>'}`;
+					},
+					error: function () {
+						alert(
+							"Hubo un error al crear el juego. Por favor, inténtalo de nuevo."
+						);
+					},
+				});
+			});
+		</script>
+	</body>
+</html>
